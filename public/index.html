@@ -2,40 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PST Voice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PST Voice Call</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- 🔒 Login Page -->
+  <div id="loginDiv" class="centered">
+    <h2>🔐 Login</h2>
+    <input id="username" placeholder="Username" /><br />
+    <input id="password" type="password" placeholder="Password" /><br />
+    <button onclick="login()">Login</button>
+    <div id="loginStatus" style="color:red;"></div>
+  </div>
+
+  <!-- 📞 Call Page -->
+  <div id="callDiv" class="centered hidden">
+    <h2>📞 PST Voice Call</h2>
+    <select id="userList"></select>
+    <button id="callBtn" style="margin-left: 5px;">Call</button>
+    <button id="hangupBtn" style="margin-left: 5px;">Hang Up</button>
+  </div>
+
+  <!-- 🔘 Logout Button -->
   <button id="logoutBtn" class="logout hidden">Logout</button>
 
-  <div id="loginDiv" class="container">
-    <h2>Login</h2>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <p id="loginStatus"></p>
-  </div>
-
-  <div id="callDiv" class="container hidden">
-    <h3>Call a user:</h3>
-    <select id="userList"></select>
-    <button id="callBtn">📞 Call</button>
-    <button id="hangupBtn">❌ Cut</button>
-  </div>
-
+  <!-- 📟 Incoming Call Popup -->
   <div id="incomingCall" class="popup hidden">
     <p id="incomingText"></p>
-    <button id="acceptBtn">✅ Accept</button>
-    <button id="declineBtn">❌ Decline</button>
+    <button id="acceptBtn">Accept</button>
+    <button id="declineBtn">Decline</button>
   </div>
 
+  <!-- 🔔 Ringtone -->
   <audio id="ringtone" src="ring.mp3" preload="auto"></audio>
 
+  <!-- 🔧 Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
     let myUsername = "", localStream, peer, callerName = "";
     const ringtone = document.getElementById("ringtone");
+
+    // Re-login if saved
+    window.onload = () => {
+      const savedUser = localStorage.getItem("loggedInUser");
+      if (savedUser) {
+        myUsername = savedUser;
+        socket.emit("login", { username: savedUser, password: "__RESUME__" });
+        showCallUI();
+      }
+    };
+
+    function showCallUI() {
+      document.getElementById("loginDiv").classList.add("hidden");
+      document.getElementById("callDiv").classList.remove("hidden");
+      document.getElementById("logoutBtn").classList.remove("hidden");
+    }
+
+    function showLoginUI() {
+      document.getElementById("loginDiv").classList.remove("hidden");
+      document.getElementById("callDiv").classList.add("hidden");
+      document.getElementById("logoutBtn").classList.add("hidden");
+    }
 
     function login() {
       const u = document.getElementById("username").value;
@@ -45,9 +74,8 @@
 
     socket.on("login-success", u => {
       myUsername = u;
-      document.getElementById("loginDiv").classList.add("hidden");
-      document.getElementById("callDiv").classList.remove("hidden");
-      document.getElementById("logoutBtn").classList.remove("hidden");
+      localStorage.setItem("loggedInUser", u);
+      showCallUI();
     });
 
     socket.on("login-failed", () => {
@@ -143,7 +171,9 @@
     });
 
     document.getElementById("logoutBtn").onclick = () => {
-      location.reload();
+      localStorage.removeItem("loggedInUser");
+      myUsername = "";
+      showLoginUI();
     };
   </script>
 </body>
