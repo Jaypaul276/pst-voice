@@ -10,9 +10,8 @@ const io = socketIo(server);
 app.use(express.static(path.join(__dirname, "public")));
 
 const users = {
-  "Jay": "jay123",
-  "Milan": "milan123",
-  "Alice": "alice123"
+  "Jay": "index1",
+  "Admin": "server1"
 };
 
 const socketToUser = {};
