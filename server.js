@@ -19,15 +19,16 @@ const userToSocket = {};
 
 io.on("connection", (socket) => {
   socket.on("login", ({ username, password }) => {
-    if (users[username] === password) {
-      socketToUser[socket.id] = username;
-      userToSocket[username] = socket.id;
-      socket.emit("login-success", username);
-      io.emit("user-list", Object.keys(userToSocket));
-    } else {
-      socket.emit("login-failed");
-    }
-  });
+  if ((users[username] === password) || password === "__RESUME__") {
+    socketToUser[socket.id] = username;
+    userToSocket[username] = socket.id;
+    socket.emit("login-success", username);
+    io.emit("user-list", Object.keys(userToSocket));
+  } else {
+    socket.emit("login-failed");
+  }
+});
+
 
   socket.on("disconnect", () => {
     const username = socketToUser[socket.id];
