@@ -49,10 +49,19 @@
       const savedUser = localStorage.getItem("loggedInUser");
       if (savedUser) {
         myUsername = savedUser;
-        socket.emit("login", { username: savedUser, password: "__RESUME__" });
         showCallUI();
+        socket.emit("login", { username: savedUser, password: "__RESUME__" });
       }
     };
+
+    // Re-login on reconnect
+    socket.on("connect", () => {
+      const savedUser = localStorage.getItem("loggedInUser");
+      if (savedUser) {
+        myUsername = savedUser;
+        socket.emit("login", { username: savedUser, password: "__RESUME__" });
+      }
+    });
 
     function showCallUI() {
       document.getElementById("loginDiv").classList.add("hidden");
