@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PST Voice Call</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" /> <!-- prevents 404 for favicon -->
 </head>
 <body>
   <!-- 🔒 Login Page -->
@@ -41,10 +42,9 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let myUsername = "", localStream, peer, callerName = "";
+    let myUsername = "", localStream = null, peer = null, callerName = "";
     const ringtone = document.getElementById("ringtone");
 
-    // Re-login if saved
     window.onload = () => {
       const savedUser = localStorage.getItem("loggedInUser");
       if (savedUser) {
@@ -54,7 +54,6 @@
       }
     };
 
-    // Re-login on reconnect
     socket.on("connect", () => {
       const savedUser = localStorage.getItem("loggedInUser");
       if (savedUser) {
@@ -101,17 +100,19 @@
     });
 
     async function getMedia() {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        alert("⚠️ Unable to access microphone. Please allow microphone permission.");
+      }
     }
 
     async function createPC(remoteUsername, offer = true) {
       peer = new RTCPeerConnection({
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" }
-  ]
-});
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
 
-      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+      localStream?.getTracks().forEach(track => peer.addTrack(track, localStream));
 
       peer.onicecandidate = e => {
         if (e.candidate) {
@@ -122,7 +123,9 @@
       peer.ontrack = e => {
         const audio = new Audio();
         audio.srcObject = e.streams[0];
-        audio.play();
+        audio.autoplay = true;
+        audio.controls = false;
+        audio.play().catch(console.error);
       };
 
       if (offer) {
@@ -135,12 +138,12 @@
     document.getElementById("callBtn").onclick = async () => {
       await getMedia();
       const target = document.getElementById("userList").value;
-      createPC(target, true);
+      if (target) createPC(target, true);
     };
 
     document.getElementById("hangupBtn").onclick = () => {
       if (peer) {
-        peer.getSenders().forEach(s => s.track && s.track.stop());
+        peer.getSenders().forEach(s => s.track?.stop());
         peer.close();
         peer = null;
       }
@@ -152,6 +155,7 @@
 
     document.getElementById("acceptBtn").onclick = async () => {
       ringtone.pause();
+      ringtone.currentTime = 0;
       document.getElementById("incomingCall").classList.add("hidden");
       await getMedia();
       await createPC(callerName, false);
@@ -163,6 +167,7 @@
 
     document.getElementById("declineBtn").onclick = () => {
       ringtone.pause();
+      ringtone.currentTime = 0;
       document.getElementById("incomingCall").classList.add("hidden");
       window._offer = null;
       callerName = "";

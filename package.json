@@ -1,7 +1,7 @@
 {
   "name": "pst-voice",
   "version": "1.0.0",
-  "description": "WebRTC voice calling app using Socket.IO",
+  "description": "WebRTC voice calling app using Socket.IO and Express",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,6 +11,15 @@
     "socket.io": "^4.8.1"
   },
   "engines": {
-    "node": ">=14.0.0"
-  }
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "webrtc",
+    "socket.io",
+    "voice-call",
+    "express",
+    "nodejs"
+  ],
+  "author": "Jay Paul",
+  "license": "MIT"
 }
